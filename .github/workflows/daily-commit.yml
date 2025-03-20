@@ -28,7 +28,7 @@ jobs:
             for i in $(seq 1 $NUM_COMMITS); do
               echo "$(date) - Random commit $i" >> random-commits.txt
               git add random-commits.txt
-              git commit -m "Random commit $i on $(date)"
+              git commit -m "Daily commit $i on $(date)"
             done
           else
             echo "Skipping commits today."
