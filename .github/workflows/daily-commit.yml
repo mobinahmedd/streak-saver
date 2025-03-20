@@ -1,10 +1,12 @@
-name: Generate Random Commits
+name: Random Daily Commits
 
 on:
-  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  generate_commits:
+  commit:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,31 +19,20 @@ jobs:
           git config --global user.email "mobinahmed4321@gmail.com"
 
       - name: Generate Random Commits
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          # Start date (2 years ago)
-          START_DATE=$(date -d "2 years ago" +%s)
-          # End date (yesterday)
-          END_DATE=$(date -d "yesterday" +%s)
+          # Get a random number of commits (0 to 4)
+          NUM_COMMITS=$((RANDOM % 5))
+          echo "Making $NUM_COMMITS commits today"
 
-          # Iterate over each day in the last 2 years
-          for ((timestamp=$START_DATE; timestamp<=$END_DATE; timestamp+=86400)); do
-            # Randomly decide whether to commit (0 to 4 commits per day)
-            NUM_COMMITS=$(( RANDOM % 5 ))
-            
-            if [ $NUM_COMMITS -gt 0 ]; then
-              for ((i=0; i<$NUM_COMMITS; i++)); do
-                # Set a random time within the day
-                COMMIT_TIME=$(date -d "@$((timestamp + RANDOM % 86400))" --iso-8601=seconds)
-
-                # Generate a commit
-                echo "$COMMIT_TIME" > random-commit.txt
-                git add random-commit.txt
-                GIT_COMMITTER_DATE="$COMMIT_TIME" GIT_AUTHOR_DATE="$COMMIT_TIME" git commit -m "Random commit on $COMMIT_TIME"
-              done
-            fi
-          done
+          if [ "$NUM_COMMITS" -gt 0 ]; then
+            for i in $(seq 1 $NUM_COMMITS); do
+              echo "$(date) - Random commit $i" >> random-commits.txt
+              git add random-commits.txt
+              git commit -m "Random commit $i on $(date)"
+            done
+          else
+            echo "Skipping commits today."
+          fi
 
       - name: Push Changes
         env:
